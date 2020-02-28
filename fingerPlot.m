@@ -1,29 +1,49 @@
+%importing the data into arrays
 controlType = readtable('controlType.csv');
 parkinsonsType = readtable('parkinsonsType.csv');
 
-frames = 300;
+%storing thumb and finger data separately
+parkinsonsThumb = parkinsonsType(1:2:end,:);
+parkinsonsIndex = parkinsonsType(2:2:end,:);
+
+controlThumb = controlType(1:2:end,:);
+controlIndex = controlType(2:2:end,:);
+
+frames = 100;
 
 for i = 1 : frames
     
-    x1CT = controlType{1*i:2*i,2};
-    x2CT = controlType{2*i:2*i,2};
-   
-    y1CT = controlType{1*i:2*i,3};
-    y2CT = controlType{2*i:2*i,3};
+    xCT = controlThumb{i, 2};
+    yCT = controlThumb{i, 3};
+    zCT = controlThumb{i, 4};
     
-    z1CT = controlType{1*i:2*i,4};
-    z2CT = controlType{2*i:2*i,4};
+    xCI = controlIndex{i, 2};
+    yCI = controlIndex{i, 3};
+    zCI = controlIndex{i, 4};
     
-    %plot3(xCT, yCT, zCT, 'o');
+    xPT = parkinsonsThumb{i, 2};
+    yPT = parkinsonsThumb{i, 3};
+    zPT = parkinsonsThumb{i, 4};
     
-    plot3(x1CT, y1CT, z1CT, x2CT, y2CT, z2CT, 'o', 'LineWidth', 2.0);
-    plot3(x2CT, y2CT, z2CT, 'o', 'LineWidth', 2.0);
-
+    xPI = parkinsonsIndex{i, 2};
+    yPI = parkinsonsIndex{i, 3};
+    zPI = parkinsonsIndex{i, 4};
+    
+    
+    plot3(xCI,yCI,zCI,'o','LineWidth', 2.0);
+    hold on;
+    plot3(xCT,yCT,zCT,'o','LineWidth', 2.0);
+    
+    set(gca, 'ZDir','reverse');
     set(gcf, 'Position',  [25, 25, 1200, 1900]);
-    xlim([10,20]);
-    ylim([5,20]);
-    zlim([-4,2]);
-    
+    xlim([13 20]);
+    ylim([5 20]);
+    zlim([-4 2]);
+    xlabel("x-axis");
+    ylabel("y-axis");
+    zlabel("z-axis");
     
     pause(.05);
+    
+    
 end

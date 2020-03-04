@@ -11,8 +11,10 @@ controlIndex = controlType(2:2:end,:);
 
 frames = 100;
 
+
 for i = 1 : frames
     
+    %storing individual x y z components in a variable
     xCT = controlThumb{i, 2};
     yCT = controlThumb{i, 3};
     zCT = controlThumb{i, 4};
@@ -29,21 +31,33 @@ for i = 1 : frames
     yPI = parkinsonsIndex{i, 3};
     zPI = parkinsonsIndex{i, 4};
     
-    
+    %3d plot of the euclydian co-ordinates
     plot3(xCI,yCI,zCI,'o','LineWidth', 2.0);
     hold on;
     plot3(xCT,yCT,zCT,'o','LineWidth', 2.0);
     
+    %inverting z-axis
     set(gca, 'ZDir','reverse');
+    
+    %fixing figure window size
     set(gcf, 'Position',  [25, 25, 1200, 1900]);
+    
+    %figure axis boundaries
     xlim([13 20]);
     ylim([5 20]);
     zlim([-4 2]);
+    
+    %figure axis lavels
     xlabel("x-axis");
     ylabel("y-axis");
     zlabel("z-axis");
     
-    pause(.05);
     
+    pause(.05);  
     
 end
+
+
+
+
+

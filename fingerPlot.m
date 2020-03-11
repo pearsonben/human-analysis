@@ -1,6 +1,6 @@
 %importing the data into arrays
-controlType = readtable('controlType.csv');
-parkinsonsType = readtable('parkinsonsType.csv');
+controlType = readtable('./data/control/controlType.csv');
+parkinsonsType = readtable('./data/parkinsons/parkinsonsType.csv');
 
 %storing thumb and finger data separately
 parkinsonsThumb = parkinsonsType(1:2:end,:);
@@ -31,6 +31,8 @@ for i = 1 : frames
     yPI = parkinsonsIndex{i, 3};
     zPI = parkinsonsIndex{i, 4};
     
+    
+    grid on;
     %3d plot of the euclydian co-ordinates
     plot3(xCI,yCI,zCI,'o','LineWidth', 2.0);
     hold on;
@@ -43,9 +45,11 @@ for i = 1 : frames
     set(gcf, 'Position',  [25, 25, 1200, 1900]);
     
     %figure axis boundaries
+    
     xlim([13 20]);
     ylim([5 20]);
     zlim([-4 2]);
+
     
     %figure axis lavels
     xlabel("x-axis");

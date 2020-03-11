@@ -1,6 +1,6 @@
 %importing the data into arrays
-controlType = readtable('controlType.csv');
-parkinsonsType = readtable('parkinsonsType.csv');
+controlType = readtable('./data/control/controlType.csv');
+parkinsonsType = readtable('./data/parkinsons/parkinsonsType.csv');
 
 %storing thumb and finger data separately
 parkinsonsThumb = parkinsonsType(1:2:end,:);
@@ -32,20 +32,38 @@ parkinsonsThumbPositions = [xPT yPT zPT];
 parkinsonsIndexPositions = [xPI yPI zPI];
 
 %euclydian distance between two co-ordinates in matlab
-iterations = 200;
-euclydianDistance = zeros(iterations,1);
-
+iterations = 100;
+euclydianDistanceControl = zeros(iterations,1);
+euclydianDistanceParkinsons = zeros(iterations,1);
 
 %fixing figure window size
 set(gcf, 'Position',  [25, 25, 1200, 1900]);
-xlim([0 200]);
-ylim([1 1.5]);
+xlim([0 100]);
+ylim([0 1.5]);
 
 grid on;
-trend = animatedline('Color', 'b', 'LineWidth', 2.0);
+
+trendControl = animatedline('Color', 'b', 'LineWidth', 2.0);
+trendParkinsons = animatedline('Color', 'r', 'LineWidth', 2.0);
+
+accumulatedDistanceControl = 0;
+accumulatedDistanceParkinsons = 0;
 
 for k = 1 : iterations
-    euclydianDistance(k, 1) = norm(controlThumbPositions(k,1) - controlIndexPositions(k,1));
-    addpoints(trend, k, (euclydianDistance(k)));
+    euclydianDistanceControl(k, 1) = norm(controlThumbPositions(k,1) - controlIndexPositions(k,1));
+    accumulatedDistanceControl = accumulatedDistanceControl + euclydianDistanceControl(k,1);
+    addpoints(trendControl, k, (euclydianDistanceControl(k)));
+  
+    euclydianDistanceParkinsons(k,1) = norm(parkinsonsThumbPositions(k,1) - parkinsonsIndexPositions(k,1));
+    accumulatedDistanceParkinsons = accumulatedDistanceParkinsons + euclydianDistanceParkinsons(k,1);
+    addpoints(trendParkinsons, k, (euclydianDistanceParkinsons(k)));
     drawnow
 end
+
+
+
+
+
+
+
+

@@ -14,8 +14,6 @@ if ~isfolder(myParkinsonsFolder)
     return;
 end
 
-% CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
-iterations = 300;
 
 filePatternControl = fullfile(myControlFolder, '*.csv');
 theFilesControl = dir(filePatternControl);
@@ -23,9 +21,7 @@ theFilesControl = dir(filePatternControl);
 filePatternParkinsons = fullfile(myParkinsonsFolder, '*.csv');
 theFilesParkinsons = dir(filePatternParkinsons);
 
-
-
-
+legend('Control Type', 'Parkinsonian Type', 'FontSize', 14);
 
 for k = 1 : length(theFilesControl)
     
@@ -37,12 +33,13 @@ for k = 1 : length(theFilesControl)
     fullFileNameParkinsons = fullfile(myParkinsonsFolder, baseFileNameParkinsons);
     dataParkinsons = readtable(fullFileNameParkinsons);
     
-    plotData(dataControl, dataParkinsons, k, iterations);
+    plotData(dataControl, dataParkinsons, k);
     
 end
 
 
-function plotData(dataControl, dataParkinsons, figurenum, iterations)
+
+function plotData(dataControl, dataParkinsons, figurenum)
 
     parkinsonsThumb = dataParkinsons(1:2:end,:);
     parkinsonsIndex = dataParkinsons(2:2:end,:);
@@ -73,7 +70,7 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     parkinsonsIndexPositions = [xPI yPI zPI];
     
         %euclydian distance between two co-ordinates in matlab
-    
+    iterations = 300;
     euclydianDistanceControl = zeros(iterations,1);
     euclydianDistanceParkinsons = zeros(iterations,1);
 
@@ -81,14 +78,14 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     xLimIncrement = iterations/(iterations/100);
 
     %fixing figure window size
-    set(gcf, 'Position',  [15, 15, 1500, 950]);
+    set(gcf, 'Position',  [25, 25, 1200, 800]);
     xlim([0 xLimIncrement]);
     ylim([0 5]);
 
-    
+    ylabel("Distance between Finger and Thumb");
+    xlabel("Frame Number")
 
-
-    
+    grid on;
 
     accumulatedDistanceControl = 0;
     accumulatedDistanceParkinsons = 0;
@@ -123,22 +120,13 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
  
     x = 1:iterations;
     
-   
     plot(x, control, 'LineWidth', 2, 'color', 'r')
     hold on
-    plot(x, parkinsons, 'LineWidth', 2, 'color', 'b');
     plot(x(TF1), control(TF1), 'r*', 'LineWidth', 2', 'color', 'g');
     plot(x(TF2), parkinsons(TF2), 'r*', 'LineWidth', 2', 'color', 'g');
     plot(x(TF3), control(TF3), 'r*', 'LineWidth', 2', 'color', 'c');
     plot(x(TF4), parkinsons(TF4), 'r*', 'LineWidth', 2', 'color', 'c');
-    
-    title("$\textbf{\emph Displacement of Finger and Thumb as a function of time (}$" + iterations + "$\textbf{\emph frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
-    ylabel('$\textbf{\emph Z-Axis displacement from starting position}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
-    xlabel('$\textbf{\emph Frame Number}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
-    ylim([0 7]);
-    
-    legend('$\textbf{\emph Control Type}$', 'Parkinsonian Type', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
-    grid on;
+    plot(x, parkinsons, 'LineWidth', 2, 'color', 'b')
     
     %rotating x array to a x*1 array instead of 1*x
     xRot = rot90(x);
@@ -167,13 +155,14 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     ControlSpeed = (control(TF3)-control(TF1))./(xRot(TF3)-xRot(TF1));
     ParkinsonsSpeed = (parkinsons(TF4)-parkinsons(TF2))./(xRot(TF4)-xRot(TF2));
      
-    % getting the average value, ignoring sign
     AverageControlSpeed = abs(mean(ControlSpeed));
     AverageParkinsonsSpeed = abs(mean(ParkinsonsSpeed));
-    txt = ['Average Control Type Speed: ' num2str(AverageControlSpeed) 'x/frame'];
-    text(0, 1, txt, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
-    AverageControlSpeed
-    AverageParkinsonsSpeed
+    ControlSpeed
+    %AverageControlSpeed
+    %AverageParkinsonsSpeed
+    %[control TF1 control TF3]
+      
+    %getSpeed(control, parkinsons, TF1, TF2, TF3, TF4)
     figure(figurenum)
 
 end
@@ -226,6 +215,12 @@ function getSpeed(control, parkinsons, TF1, TF2, TF3, TF4)
     %recorded at 70fps, so each frame = 1/70 seconds = 0.0142s. 
     
     speed(1,1) = distanceTravelled(1,1) / timeElapsed(1,1);
+ 
+    
+    
+   
+    %-------------------------------------------------------
+    
     
 end
 

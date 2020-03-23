@@ -1,6 +1,8 @@
-myControlFolder = './data/control/';
-myParkinsonsFolder = './data/parkinsons/';
 
+%---------------------- boilerplate MATLAB batch processing ---------------
+myControlFolder = './data/control/';
+myParkinsonsFolder = './data/parkinsons/';                                                 
+    
 %checking for valid filepath
 if ~isfolder(myControlFolder)
     errorMessage=sprintf('Error: The following folder does not exist:\n%s', myWTFolder);
@@ -14,19 +16,19 @@ if ~isfolder(myParkinsonsFolder)
     return;
 end
 
-% CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
-iterations = 300;
-
 filePatternControl = fullfile(myControlFolder, '*.csv');
 theFilesControl = dir(filePatternControl);
 
 filePatternParkinsons = fullfile(myParkinsonsFolder, '*.csv');
 theFilesParkinsons = dir(filePatternParkinsons);
 
+%-----------------------------------end of boilerplate----------------------------
 
 
+% CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
+iterations = 300;
 
-
+%-----------------------iterate over each CSV file---------------------------------------
 for k = 1 : length(theFilesControl)
     
     baseFileNameControl = theFilesControl(k).name;
@@ -40,76 +42,64 @@ for k = 1 : length(theFilesControl)
     plotData(dataControl, dataParkinsons, k, iterations);
     
 end
+%-------------------------end of file--------------------------------------
 
-
+%------function plots csv data on seperate figure for each file------------
 function plotData(dataControl, dataParkinsons, figurenum, iterations)
-
+    
+    %splitting the csv file into two, extracting every other line
     parkinsonsThumb = dataParkinsons(1:2:end,:);
     parkinsonsIndex = dataParkinsons(2:2:end,:);
-    
     controlThumb = dataControl(1:2:end,:);
     controlIndex = dataControl(2:2:end,:);
     
+    % storing co-ordinate components for both Parkinsons and Control type
+    
+    %control thumb data
     xCT = controlThumb{1:end, 2};
     yCT = controlThumb{1:end, 3};
     zCT = controlThumb{1:end, 4};
-
+    %control index finger data
     xCI = controlIndex{1:end, 2};
     yCI = controlIndex{1:end, 3};
     zCI = controlIndex{1:end, 4};
-
+    %parkinsonian thumb data
     xPT = parkinsonsThumb{1:end, 2};
     yPT = parkinsonsThumb{1:end, 3};
     zPT = parkinsonsThumb{1:end, 4};
-
+    %parkinsonian index finger data
     xPI = parkinsonsIndex{1:end, 2};
     yPI = parkinsonsIndex{1:end, 3};
     zPI = parkinsonsIndex{1:end, 4};
     
+    %storing co-ordinates in arrays for readability
     controlThumbPositions = [xCT yCT zCT];
     controlIndexPositions = [xCI yCI zCI];
-
     parkinsonsThumbPositions = [xPT yPT zPT];
     parkinsonsIndexPositions = [xPI yPI zPI];
     
-        %euclydian distance between two co-ordinates in matlab
-    
+    %defining empty array, will contain list of distances between finger and thumb 
     euclydianDistanceControl = zeros(iterations,1);
     euclydianDistanceParkinsons = zeros(iterations,1);
-
-    %used to change xlimits for smoother looking animated plot
-    xLimIncrement = iterations/(iterations/100);
-
+  
     %fixing figure window size
     set(gcf, 'Position',  [15, 15, 1500, 950]);
-    xlim([0 xLimIncrement]);
-    ylim([0 5]);
-
     
-
-
     
-
     accumulatedDistanceControl = 0;
     accumulatedDistanceParkinsons = 0;
 
     for k = 1 : iterations
         
-        euclydianDistanceControl(k, 1) = norm(controlThumbPositions(k,3) - controlIndexPositions(k,3)) - min(euclydianDistanceControl);   
+        euclydianDistanceControl(k, 1) = abs(controlThumbPositions(k,3) - controlIndexPositions(k,3));   
+        euclydianDistanceParkinsons(k,1) = abs((parkinsonsThumbPositions(k,3)) - parkinsonsIndexPositions(k,3));
+        
         accumulatedDistanceControl = accumulatedDistanceControl + euclydianDistanceControl(k,1);
-        euclydianDistanceParkinsons(k,1) = norm(parkinsonsThumbPositions(k,3) - parkinsonsIndexPositions(k,3)) - min(euclydianDistanceParkinsons);
         accumulatedDistanceParkinsons = accumulatedDistanceParkinsons + euclydianDistanceParkinsons(k,1);
-        
-        if(mod(k,101) == 0)
-            xLimIncrement = xLimIncrement + 100;
-            xlim([0 xLimIncrement]);
-        end
-        
+  
     end
     
-    clf;
-    %fprintf('total distance travelled by parkinson subject: %f \n', accumulatedDistanceParkinsons);
-    %fprintf('total distance travelled by control subject: %f \n', accumulatedDistanceControl);
+    clf;   
     
     control = euclydianDistanceControl(1:iterations,1);
     parkinsons = euclydianDistanceParkinsons(1:iterations,1);
@@ -121,9 +111,22 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     TF3 = islocalmax(control);
     TF4 = islocalmax(parkinsons);
  
+    %normalising the data for side-by-side comparisons
+    normaliseControl = min(control(TF1));
+    normaliseParkinsons = min(parkinsons(TF2));
+    
+    % loops applying the normalisation
+    for k = 1 : length(control)
+        control(k) = control(k) -  normaliseControl;   
+    end
+  
+    for k = 1 : length(parkinsons)  
+        parkinsons(k) = parkinsons(k) -  normaliseParkinsons;      
+    end
+    
+    %used for frame data plot
     x = 1:iterations;
     
-   
     plot(x, control, 'LineWidth', 2, 'color', 'r')
     hold on
     plot(x, parkinsons, 'LineWidth', 2, 'color', 'b');
@@ -132,12 +135,12 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     plot(x(TF3), control(TF3), 'r*', 'LineWidth', 2', 'color', 'c');
     plot(x(TF4), parkinsons(TF4), 'r*', 'LineWidth', 2', 'color', 'c');
     
-    title("$\textbf{\emph Displacement of Finger and Thumb as a function of time (}$" + iterations + "$\textbf{\emph frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
+    title("$\textbf{\emph Displacement of Finger and Thumb as a function of time (" + iterations + " frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
     ylabel('$\textbf{\emph Z-Axis displacement from starting position}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
     xlabel('$\textbf{\emph Frame Number}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
     ylim([0 7]);
     
-    legend('$\textbf{\emph Control Type}$', 'Parkinsonian Type', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
+    legend('$\textbf{\emph Control Type}$', '$\textbf{\emph Parkinsonian Type}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
     grid on;
     
     %rotating x array to a x*1 array instead of 1*x
@@ -170,17 +173,26 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     % getting the average value, ignoring sign
     AverageControlSpeed = abs(mean(ControlSpeed));
     AverageParkinsonsSpeed = abs(mean(ParkinsonsSpeed));
-    txt = ['Average Control Type Speed: ' num2str(AverageControlSpeed) 'x/frame'];
-    text(0, 1, txt, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom');
-    AverageControlSpeed
-    AverageParkinsonsSpeed
+    txt1 = ['$\textbf{\emph Average Control Type Speed: ' num2str(AverageControlSpeed) ' x/frame}$'];
+    txt2 = ['$\textbf{\emph Average Parkinsonian Type Speed: ' num2str(AverageParkinsonsSpeed) '}$'];
+    txt3 = ['$\textbf{\emph Control Distance Travelled: ' num2str(accumulatedDistanceControl) '}$'];
+    txt4 = ['$\textbf{\emph Parkinsonian Distance Travelled: ' num2str(accumulatedDistanceParkinsons) '}$'];
+    %defining text at top left of figure
+    ylimits = ylim;
+    ymax = ylimits(2);
+    vert_spacing = ymax/47;  %may have to experiment with this #
+    
+    text(10, ymax-vert_spacing*1, txt1, 'Interpreter','latex');
+    text(10, ymax-vert_spacing*2, txt2, 'Interpreter','latex');
+    text(10, ymax-vert_spacing*4, txt3, 'Interpreter','latex');
+    text(10, ymax-vert_spacing*5, txt4, 'Interpreter','latex');
+    
     figure(figurenum)
 
 end
 
 
-% old function no longer useful. more efficient way of calculating the
-% speed
+% old function no longer useful. more efficient way of calculating speed
 function getSpeed(control, parkinsons, TF1, TF2, TF3, TF4)
 
     % minFrameNum = [1], maxFrameNum = [2], minPos = [3], maxPos = [4].

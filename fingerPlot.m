@@ -1,6 +1,6 @@
 %importing the data into arrays
-controlType = readtable('./data/control/controlType.csv');
-parkinsonsType = readtable('./data/parkinsons/parkinsonsType.csv');
+controlType = readtable('./data/control/controlType1.csv');
+parkinsonsType = readtable('./data/parkinsons/parkinsonsType1.csv');
 
 %storing thumb and finger data separately
 parkinsonsThumb = parkinsonsType(1:2:end,:);

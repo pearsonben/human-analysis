@@ -26,7 +26,8 @@ theFilesParkinsons = dir(filePatternParkinsons);
 
 
 % CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
-iterations = 300;
+iterations = 1000;
+figure;
 
 %-----------------------iterate over each CSV file---------------------------------------
 for k = 1 : length(theFilesControl)
@@ -39,13 +40,18 @@ for k = 1 : length(theFilesControl)
     fullFileNameParkinsons = fullfile(myParkinsonsFolder, baseFileNameParkinsons);
     dataParkinsons = readtable(fullFileNameParkinsons);
     
-    plotData(dataControl, dataParkinsons, k, iterations);
+    plotData(dataControl, dataParkinsons, iterations);
+    
+    %makes sure only the necessary figure windows open
+    if k+1 <= length(theFilesControl)
+        figure(k+1);
+    end
     
 end
 %-------------------------end of file--------------------------------------
 
 %------function plots csv data on seperate figure for each file------------
-function plotData(dataControl, dataParkinsons, figurenum, iterations)
+function plotData(dataControl, dataParkinsons, iterations)
     
     %splitting the csv file into two, extracting every other line
     parkinsonsThumb = dataParkinsons(1:2:end,:);
@@ -127,19 +133,46 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     %used for frame data plot
     x = 1:iterations;
     
-    plot(x, control, 'LineWidth', 2, 'color', 'r')
+    %plot(x, control, 'LineWidth', 2, 'color', 'r')
     hold on
     plot(x, parkinsons, 'LineWidth', 2, 'color', 'b');
-    plot(x(TF1), control(TF1), 'r*', 'LineWidth', 2', 'color', 'g');
+    %plot(x(TF1), control(TF1), 'r*', 'LineWidth', 2', 'color', 'g');
     plot(x(TF2), parkinsons(TF2), 'r*', 'LineWidth', 2', 'color', 'g');
-    plot(x(TF3), control(TF3), 'r*', 'LineWidth', 2', 'color', 'c');
+    
+    %plot(x(TF3), control(TF3), 'r*', 'LineWidth', 2', 'color', 'c');
     plot(x(TF4), parkinsons(TF4), 'r*', 'LineWidth', 2', 'color', 'c');
+    
+    %plotting the lines of best fit for min/max values
+    p1 = polyfit(x(TF4), parkinsons(TF4), 1);
+    f1 = polyval(p1, x(TF4));
+
+    plot(x(TF4), f1, '--r', 'color', 'k', 'LineWidth', 2.0);
+    p2 = polyfit(x(TF2), parkinsons(TF2), 1);
+    f2 = polyval(p2, x(TF2));
+    plot(x(TF2), f2, '--r', 'color', 'k', 'LineWidth', 2.0);
+    
+    % one method could be to check the gradient of the below lines, and if
+    % the gradient surpasses a certain point, you could figure out that
+    % there has been a hesitation
+%     plot(x(TF1), control(TF1), 'LineWidth', 1.5', 'color', 'k');
+%     plot(x(TF3), control(TF3), 'LineWidth', 1.5', 'color', 'b');
+%     plot(x(TF2), parkinsons(TF2), 'LineWidth', 1.5', 'color', 'r');
+%     plot(x(TF4), parkinsons(TF4), 'LineWidth', 1.5', 'color', 'g');
+   
+    
+    
+    
+    z = polyfit(x(TF2), parkinsons(TF2), 8);
+    y1 = polyval(z, x(TF2));
+    %plots terrible curve of best fit, for the local minimas
+    %plot(x(TF2),y1, 'LineWidth', 2, 'color', 'k');
+    
     
     title("$\textbf{\emph Displacement of Finger and Thumb as a function of time (" + iterations + " frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
     ylabel('$\textbf{\emph Z-Axis displacement from starting position}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
     xlabel('$\textbf{\emph Frame Number}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
     ylim([0 7]);
-    
+    xlim([0 200]);
     legend('$\textbf{\emph Control Type}$', '$\textbf{\emph Parkinsonian Type}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
     grid on;
     
@@ -153,7 +186,7 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     lastTF4 = find(TF4,1,'last');
     
     % if matrix sizes are mismatched, remove the last non-zero element to
-    % make them evenly lengthed
+    % make them evenly lengthed.theres probably a better way of doing this 
     if length(control(TF3)) > length(control(TF1))
         TF3(lastTF3) = [];
     elseif length(control(TF3)) < length(control(TF1))
@@ -170,6 +203,9 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     ControlSpeed = (control(TF3)-control(TF1))./(xRot(TF3)-xRot(TF1));
     ParkinsonsSpeed = (parkinsons(TF4)-parkinsons(TF2))./(xRot(TF4)-xRot(TF2));
      
+    parkinsons_distance = parkinsons(TF3)-parkinsons(TF1);
+
+    
     % getting the average value, ignoring sign
     AverageControlSpeed = abs(mean(ControlSpeed));
     AverageParkinsonsSpeed = abs(mean(ParkinsonsSpeed));
@@ -180,16 +216,24 @@ function plotData(dataControl, dataParkinsons, figurenum, iterations)
     %defining text at top left of figure
     ylimits = ylim;
     ymax = ylimits(2);
-    vert_spacing = ymax/47;  %may have to experiment with this #
+    vert_spacing = ymax/47;  %arbitrary positioning
     
     text(10, ymax-vert_spacing*1, txt1, 'Interpreter','latex');
     text(10, ymax-vert_spacing*2, txt2, 'Interpreter','latex');
     text(10, ymax-vert_spacing*4, txt3, 'Interpreter','latex');
     text(10, ymax-vert_spacing*5, txt4, 'Interpreter','latex');
     
-    figure(figurenum)
+end
+
+
+function identify_hesitations()
+
+    
 
 end
+
+
+
 
 
 % old function no longer useful. more efficient way of calculating speed
@@ -240,4 +284,6 @@ function getSpeed(control, parkinsons, TF1, TF2, TF3, TF4)
     speed(1,1) = distanceTravelled(1,1) / timeElapsed(1,1);
     
 end
+
+
 

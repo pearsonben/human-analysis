@@ -1,7 +1,6 @@
 % Plots the distance between the finger and thumb for a MDS-UPDRS test
 % ref: https://www.movementdisorders.org/MDS/MDS-Rating-Scales/MDS-Unified-Parkinsons-Disease-Rating-Scale-MDS-UPDRS.htm
-% calculates the average speed and total distance travelled of both
-% Parkinsons and Control subjects. Also useful for visually identifying key
+%  useful for visually identifying key
 % characteristics such as hesitations, and slowing of movements. 
 
 %---------------------- boilerplate MATLAB batch processing ---------------
@@ -30,7 +29,7 @@ theFilesParkinsons = dir(filePatternParkinsons);
 %-----------------------------------end of boilerplate----------------------------
 
 
-% CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
+% number of frames being analysed
 iterations = 1500;
 figure;
 
@@ -54,6 +53,7 @@ for k = 1 : length(theFilesControl)
     
 end
 %-------------------------end of file--------------------------------------
+
 
 %------function plots csv data on seperate figure for each file------------
 function plotData(dataControl, dataParkinsons, iterations)
@@ -113,6 +113,7 @@ function plotData(dataControl, dataParkinsons, iterations)
     
     clf;   
     
+   
     control = euclydianDistanceControl(1:iterations,1);
     parkinsons = euclydianDistanceParkinsons(1:iterations,1);
     
@@ -128,9 +129,7 @@ function plotData(dataControl, dataParkinsons, iterations)
     normaliseParkinsons = min(parkinsons(TF2));
     
     
-    
-    
-    % loops applying the normalisation
+    % loops applying the normalisation process
     for k = 1 : length(control)  
         control(k) = (control(k) -  normaliseControl);
     end
@@ -172,27 +171,12 @@ function plotData(dataControl, dataParkinsons, iterations)
     p2 = polyfit(x(TF2), parkinsons(TF2), 1);
     f2 = polyval(p2, x(TF2));
     %plot(x(TF2), f2, '--r', 'color', 'k', 'LineWidth', 2.0);
-    
-    % one method could be to check the gradient of the below lines, and if
-    % the gradient surpasses a certain point, you could figure out that
-    % there has been a hesitation
-%     plot(x(TF1), control(TF1), 'LineWidth', 1.5', 'color', 'k');
-%     plot(x(TF3), control(TF3), 'LineWidth', 1.5', 'color', 'b');
-%     plot(x(TF2), parkinsons(TF2), 'LineWidth', 1.5', 'color', 'r');
-%     plot(x(TF4), parkinsons(TF4), 'LineWidth', 1.5', 'color', 'g');
-   
-    
-    
-    
-    %z = polyfit(x(TF2), parkinsons(TF2), 8);
-    %y1 = polyval(z, x(TF2));
-    %plots terrible curve of best fit, for the local minimas
-    %plot(x(TF2),y1, 'LineWidth', 2, 'color', 'k');
-    
-    
+      
+%     plot titles and labels
     title("$\textbf{\emph Displacement of Finger and Thumb as a function of time (" + iterations + " frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
     ylabel('$\textbf{\emph Z-Axis displacement from \newline starting position}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
     xlabel('$\textbf{\emph Frame Number}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
+%     defining axis boundaries
     ylim([0 1.5]);
     xlim([0 200]);
     legend('$\textbf{\emph Control Type}$', '$\textbf{\emph Parkinsonian Type}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
@@ -239,11 +223,11 @@ function plotData(dataControl, dataParkinsons, iterations)
     wt_frequency = (wt_minimas)/(time);
     pt_frequency = (pt_minimas)/(time);
     
-    
+%     identifies hesitations
     [wt_hesitations, pt_hesitations] = identify_hesitations(control,parkinsons, TF1, TF2, TF3, TF4);
     
 
-    % getting the average value, ignoring sign
+    % getting the average speed, ignoring sign
     AverageControlSpeed = abs(mean(ControlSpeed));
     AverageParkinsonsSpeed = abs(mean(ParkinsonsSpeed));
     
@@ -261,8 +245,9 @@ function plotData(dataControl, dataParkinsons, iterations)
     %defining text at top left of figure
     ylimits = ylim;
     ymax = ylimits(2);
-    vert_spacing = ymax/47;  %arbitrary positioning
+    vert_spacing = ymax/47;  %arbitrary positioning of text
          
+%     prints the calculated results to the plot
     text(8, ymax-vert_spacing*1, txt1, 'Interpreter','latex');
     text(8, ymax-vert_spacing*2, txt2, 'Interpreter','latex');
     text(8, ymax-vert_spacing*3, txt3, 'Interpreter','latex');

@@ -1,8 +1,3 @@
-% Plots the distance between the finger and thumb for a MDS-UPDRS test
-% ref: https://www.movementdisorders.org/MDS/MDS-Rating-Scales/MDS-Unified-Parkinsons-Disease-Rating-Scale-MDS-UPDRS.htm
-% calculates the average speed and total distance travelled of both
-% Parkinsons and Control subjects. Also useful for visually identifying key
-% characteristics such as hesitations, and slowing of movements. 
 
 %---------------------- boilerplate MATLAB batch processing ---------------
 myControlFolder = './data/control/';
@@ -32,10 +27,11 @@ theFilesParkinsons = dir(filePatternParkinsons);
 
 % CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
 iterations = 1500;
-figure;
+
+gradients = zeros(length(theFilesControl), 2);
 
 %-----------------------iterate over each CSV file---------------------------------------
-for k = 1 : 5
+for k = 1 : length(theFilesControl)
     
     baseFileNameControl = theFilesControl(k).name;
     fullFileNameControl = fullfile(myControlFolder, baseFileNameControl);
@@ -45,18 +41,27 @@ for k = 1 : 5
     fullFileNameParkinsons = fullfile(myParkinsonsFolder, baseFileNameParkinsons);
     dataParkinsons = readtable(fullFileNameParkinsons);
     
-    plotData(dataControl, dataParkinsons, iterations);
-    
-    %makes sure only the necessary figure windows open
-    if k+1 <= 5
-        figure(k+1);
-    end
+    val = plotData(dataControl, dataParkinsons, iterations);
+    gradients(k, 1) = val(1);
+    gradients(k, 2) = val(2);
     
 end
+
+avg_wt_hesitations = mean(gradients(1:end,1));
+avg_pt_hesitations = mean(gradients(1:end,2));
+
+
+fprintf('Average number of control hesitations: %.0f\t', avg_wt_hesitations);
+fprintf('Average number of PD hesitations: %.0f\n', avg_pt_hesitations);
+
+% gradients
+
+
+
 %-------------------------end of file--------------------------------------
 
 %------function plots csv data on seperate figure for each file------------
-function plotData(dataControl, dataParkinsons, iterations)
+function gradients = plotData(dataControl, dataParkinsons, iterations)
     
     %splitting the csv file into two, extracting every other line
     parkinsonsThumb = dataParkinsons(1:2:end,:);
@@ -92,11 +97,7 @@ function plotData(dataControl, dataParkinsons, iterations)
     %defining empty array, will contain list of distances between finger and thumb 
     euclydianDistanceControl = zeros(iterations,1);
     euclydianDistanceParkinsons = zeros(iterations,1);
-  
-    %fixing figure window size
-    set(gcf, 'Position',  [15, 15, 1500, 950]);
-    
-    
+   
     accumulatedDistanceControl = 0;
     accumulatedDistanceParkinsons = 0;
 
@@ -147,14 +148,8 @@ function plotData(dataControl, dataParkinsons, iterations)
         parkinsons(k) = parkinsons(k)/maxParkinsons;
     end
     
-    
     %used for frame data plot
     x = 1:iterations;
-    
-    
-    
-    %rotating x array to a x*1 array instead of 1*x
-    xRot = rot90(x);
     
     % getting last non-zero value of the TF arrays.
     lastTF1 = find(TF1,1,'last');
@@ -177,40 +172,56 @@ function plotData(dataControl, dataParkinsons, iterations)
     end
     
     %calculating the gradient of the slope between each maxima and minima
-    ControlSpeed = abs((control(TF3)-control(TF1))./((xRot(TF3)-xRot(TF1))*0.0142));
-    ParkinsonsSpeed = abs((parkinsons(TF4)-parkinsons(TF2))./((xRot(TF4)-xRot(TF2))*0.0142));
     
-    x1 = rot90(1:length(ControlSpeed));
-    x2 = rot90(1:length(ParkinsonsSpeed));
-     
-    %determining lines of best fit
-    p1 = polyfit(x1, ControlSpeed,1);
-    f1 = polyval(p1,x2);
+    control_amplitude = abs(control(TF3) - control(TF1));
+    parkinsons_amplitude = abs(parkinsons(TF4) - parkinsons(TF2));
     
-    p2 = polyfit(x2, ParkinsonsSpeed,1);
-    f2 = polyval(p2,x2);
+    x1 = rot90(1:length(control_amplitude));
+    x2 = rot90(1:length(parkinsons_amplitude));
     
+    p1 = polyfit(x1, control_amplitude,1);
+    p2 = polyfit(x2, parkinsons_amplitude,1);
+
+    wt_gradient = p1(1);
+    pt_gradient = p2(1);
     
-    
-    plot(x1, ControlSpeed, 'r*', 'LineWidth', 2', 'color', 'r');
-    %hold on;
-    %plot(x2, ParkinsonsSpeed, 'r*', 'LineWidth', 2', 'color', 'b');
-    grid on;
-    hold on;
-    %plot(x2, f2, '--r', 'LineWidth', 2.0, 'color', 'r');
-    plot(x2, f1, '--r', 'LineWidth', 2.0, 'color', 'b');
-    
-    title("$\textbf{\emph Speed Regression over time for MDS UPDRS test, for  (" + iterations + " frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
-    ylabel('$\textbf{\emph Speed (units/second)}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
-    xlabel('$\textbf{\emph Movement Cycle}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
-    legend('$\textbf{\emph Speed}$', '$\textbf{\emph Regression Line}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
+    [wt_hesitations, pt_hesitations] = identify_hesitations(control,parkinsons, TF1, TF2, TF3, TF4);
     
     
+    gradients = [wt_hesitations pt_hesitations];
     
 end
 
 
+% function counts the total number of hesitations for each type, then
+% returns an array with the value each type
+function [wt_hesitation_counter, pt_hesitation_counter] = identify_hesitations(control, parkinsons, TF1, TF2, TF3, TF4)
 
+    wt_mins = control(TF1);
+    wt_maxs = control(TF3);
+    pt_mins = parkinsons(TF2);
+    pt_maxs = parkinsons(TF4);
+    
+    wt_hesitation_counter = 0;
+    pt_hesitation_counter = 0;
+    for i = 1 : size(wt_mins)
+       %arbitrary -+ 0.25 to identify if a maxima is too close to a minima,
+       %seeing if theres a hesitation
+       if (wt_maxs(i) <= wt_mins(i) + 0.25) || (wt_mins(i) >=  wt_maxs(i) - 0.25)
+            wt_hesitation_counter = wt_hesitation_counter + 1;
+
+       end
+    end
+    
+    for i = 1 : size(pt_mins)
+        
+        if (pt_maxs(i) <= pt_mins(i) + 0.25) || (pt_mins(i) >=  pt_maxs(i) - 0.25)
+            pt_hesitation_counter = pt_hesitation_counter + 1;
+
+        end
+
+    end
+end
 
 
 

@@ -135,12 +135,29 @@ function plotData(dataControl, dataParkinsons, iterations)
     maxParkinsons = max(parkinsons(TF4));
     
     for k = 1 : length(control)  
-        control(k) = control(k)/maxControl;
+        control(k) = (control(k)/maxControl);
     end
   
     for k = 1 : length(parkinsons)        
-        parkinsons(k) = parkinsons(k)/maxParkinsons;
+        parkinsons(k) = (parkinsons(k)/maxParkinsons);
     end
+    
+%    5 seconds = 5/0.0142 = 352 frames
+    average_first_five_seconds_control = mean(control(1:352));
+    average_first_five_seconds_parkinsons = mean(parkinsons(1:352));
+    
+%     dividing by the average values of the first 5 seconds. 
+    for k = 1 : length(control)  
+        control(k) = (control(k)/average_first_five_seconds_control);
+    end
+  
+    for k = 1 : length(parkinsons)        
+        parkinsons(k) = (parkinsons(k)/average_first_five_seconds_parkinsons);
+    end
+    
+    
+    
+    
     
     %used for frame data plot
     x = 1:iterations;
@@ -195,12 +212,7 @@ function plotData(dataControl, dataParkinsons, iterations)
     ylabel('$\textbf{\emph Amplitude (units)}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
     xlabel('$\textbf{\emph Movement Cycle}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
     legend('$\textbf{\emph Amplitude (Parkinsons)}$', '$\textbf{\emph Regression Line}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
-    
-    
-    
-%     ylim([0 0.1]);
-%     xlim([0 50]);
-    
+   
 end
 
 

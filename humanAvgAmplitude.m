@@ -1,8 +1,3 @@
-% Plots the distance between the finger and thumb for a MDS-UPDRS test
-% ref: https://www.movementdisorders.org/MDS/MDS-Rating-Scales/MDS-Unified-Parkinsons-Disease-Rating-Scale-MDS-UPDRS.htm
-% calculates the average speed and total distance travelled of both
-% Parkinsons and Control subjects. Also useful for visually identifying key
-% characteristics such as hesitations, and slowing of movements. 
 
 %---------------------- boilerplate MATLAB batch processing ---------------
 myControlFolder = './data/control/';
@@ -32,10 +27,11 @@ theFilesParkinsons = dir(filePatternParkinsons);
 
 % CHANGING VALUE WILL AMEND AMOUNT OF FRAMES ANALYSED OF EACH FILE
 iterations = 1500;
-figure;
+
+gradients = zeros(length(theFilesControl), 2);
 
 %-----------------------iterate over each CSV file---------------------------------------
-for k = 1 : 5
+for k = 1 : length(theFilesControl)
     
     baseFileNameControl = theFilesControl(k).name;
     fullFileNameControl = fullfile(myControlFolder, baseFileNameControl);
@@ -45,18 +41,20 @@ for k = 1 : 5
     fullFileNameParkinsons = fullfile(myParkinsonsFolder, baseFileNameParkinsons);
     dataParkinsons = readtable(fullFileNameParkinsons);
     
-    plotData(dataControl, dataParkinsons, iterations);
-    
-    %makes sure only the necessary figure windows open
-    if k+1 <= 5
-        figure(k+1);
-    end
+    val = plotData(dataControl, dataParkinsons, iterations);
+    gradients(k, 1) = val(1);
+    gradients(k, 2) = val(2);
     
 end
+
+fprintf('Control Average Finger Displacement: %f\t', mean(gradients(1:end,1)));
+fprintf('PD Average Finger Displacement: %f\n', mean(gradients(1:end,2)));
+
+
 %-------------------------end of file--------------------------------------
 
 %------function plots csv data on seperate figure for each file------------
-function plotData(dataControl, dataParkinsons, iterations)
+function gradients = plotData(dataControl, dataParkinsons, iterations)
     
     %splitting the csv file into two, extracting every other line
     parkinsonsThumb = dataParkinsons(1:2:end,:);
@@ -92,11 +90,7 @@ function plotData(dataControl, dataParkinsons, iterations)
     %defining empty array, will contain list of distances between finger and thumb 
     euclydianDistanceControl = zeros(iterations,1);
     euclydianDistanceParkinsons = zeros(iterations,1);
-  
-    %fixing figure window size
-    set(gcf, 'Position',  [15, 15, 1500, 950]);
-    
-    
+   
     accumulatedDistanceControl = 0;
     accumulatedDistanceParkinsons = 0;
 
@@ -147,14 +141,8 @@ function plotData(dataControl, dataParkinsons, iterations)
         parkinsons(k) = parkinsons(k)/maxParkinsons;
     end
     
-    
     %used for frame data plot
     x = 1:iterations;
-    
-    
-    
-    %rotating x array to a x*1 array instead of 1*x
-    xRot = rot90(x);
     
     % getting last non-zero value of the TF arrays.
     lastTF1 = find(TF1,1,'last');
@@ -177,35 +165,14 @@ function plotData(dataControl, dataParkinsons, iterations)
     end
     
     %calculating the gradient of the slope between each maxima and minima
-    ControlSpeed = abs((control(TF3)-control(TF1))./((xRot(TF3)-xRot(TF1))*0.0142));
-    ParkinsonsSpeed = abs((parkinsons(TF4)-parkinsons(TF2))./((xRot(TF4)-xRot(TF2))*0.0142));
     
-    x1 = rot90(1:length(ControlSpeed));
-    x2 = rot90(1:length(ParkinsonsSpeed));
-     
-    %determining lines of best fit
-    p1 = polyfit(x1, ControlSpeed,1);
-    f1 = polyval(p1,x2);
-    
-    p2 = polyfit(x2, ParkinsonsSpeed,1);
-    f2 = polyval(p2,x2);
+    mean_control_amplitude = mean(abs(control(TF3) - control(TF1)));
+    mean_parkinsons_amplitude = mean(abs(parkinsons(TF4) - parkinsons(TF2)));
     
     
+  
     
-    plot(x1, ControlSpeed, 'r*', 'LineWidth', 2', 'color', 'r');
-    %hold on;
-    %plot(x2, ParkinsonsSpeed, 'r*', 'LineWidth', 2', 'color', 'b');
-    grid on;
-    hold on;
-    %plot(x2, f2, '--r', 'LineWidth', 2.0, 'color', 'r');
-    plot(x2, f1, '--r', 'LineWidth', 2.0, 'color', 'b');
-    
-    title("$\textbf{\emph Speed Regression over time for MDS UPDRS test, for  (" + iterations + " frames at 70fps)}$", 'Interpreter','latex', 'FontSize', 20, 'fontweight', 'bold');
-    ylabel('$\textbf{\emph Speed (units/second)}$', 'fontweight', 'bold', 'fontsize', 16, 'Interpreter','latex');
-    xlabel('$\textbf{\emph Movement Cycle}$', 'fontweight' ,'bold', 'fontsize', 16, 'Interpreter','latex');
-    legend('$\textbf{\emph Speed}$', '$\textbf{\emph Regression Line}$', 'FontSize', 14, 'Interpreter','latex', 'fontweight', 'bold');
-    
-    
+    gradients = [mean_control_amplitude mean_parkinsons_amplitude];
     
 end
 

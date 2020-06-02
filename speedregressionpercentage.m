@@ -1,3 +1,6 @@
+
+
+
 %---------------------- boilerplate MATLAB batch processing ---------------
 myControlFolder = './data/control/';
 myParkinsonsFolder = './data/parkinsons/';                                                 
@@ -74,7 +77,8 @@ end
 wt_SE_percentage = (wt_counter / length(gradients)) * 100;
 pt_SE_percentage = (pt_counter / length(gradients)) * 100;
 
-[wt_SE_percentage pt_SE_percentage]
+fprintf('Control percentage of speed SE: %.2f%%\t', wt_SE_percentage);
+fprintf('PD percentage of speed SE: %.2f%%\n', pt_SE_percentage);
 
 % gradients
 
@@ -225,9 +229,6 @@ function gradients = plotData(dataControl, dataParkinsons, iterations)
     gradients = [wt_gradient pt_gradient];
     
 end
-
-
-
 
 
 

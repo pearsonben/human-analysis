@@ -13,6 +13,8 @@ fingerdisplacementplot.m plots the displacement between finger and thumb, and us
 speedregressionplots.m calculates the regression of finger movement speeds over a period of time, to try and identify
 symptoms of the 'Sequence Effect'.
 
+![image of speedregressionplots results](https://i.imgur.com/wEnYRVl.png)
+
 ## speedregressionpercentage
 
 Calculates the gradient of the best-fit line from previous plots for all 184 human datasets, and determines which of Control 
